@@ -1,0 +1,5 @@
+[workspace]
+members = [
+    "src/dzien1_boot2_backend"
+]
+resolver = "2"
