@@ -11,14 +11,14 @@ export default {
   },
   methods: {
     async dodajNotatke() {
-      dzien1_boot2_backend.add_note(this.newNote)
+      await dzien1_boot2_backend.add_note(this.newNote)
       await this.pobierzNotatki()
     },
     async pobierzNotatki() {
       this.notes = await dzien1_boot2_backend.get_notes()
     }
   },
-  mounted() {
+  mounted(){
     this.pobierzNotatki()
   }
 }
@@ -29,11 +29,11 @@ export default {
     <img src="/logo2.svg" alt="DFINITY logo" />
     <br />
     <br />
-    <div>
+      <div>
       {{ notes }}
     </div>
     <div>
-      <textarea v-model="newNote"></textarea><button @click="dodajNotatke">Dodaj notatkę</button>
+      <textarea v-model="newNote"></textarea><button @click="dodajNotatke">Dodaj notatke</button>
     </div>
   </main>
 </template>
