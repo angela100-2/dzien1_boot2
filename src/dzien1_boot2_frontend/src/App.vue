@@ -1,12 +1,16 @@
 <script lang="ts">
 import { ref } from 'vue';
 import { dzien1_boot2_backend } from '../../declarations/dzien1_boot2_backend';
+import { AuthClient } from '@dfinity/auth-client';
+import { HttpAgent } from '@dfinity/agent';
+import type { Identity } from '@dfinity/agent';
 
 export default {
   data() {
     return {
       newNote: "",
-      notes: [] as string[]
+      notes: [] as string[],
+      identity: undefined as undefined | Identity
     }
   },
   methods: {
@@ -15,7 +19,17 @@ export default {
       await this.pobierzNotatki()
     },
     async pobierzNotatki() {
-      this.notes = await dzien1_boot2_backend.get_notes()
+      this.notes = await dzien1_boot2_backend.get_notes(Principal.anonymous)
+    },
+    async login() {
+      const authClient = await AuthClient.create()
+      await authClient.login({
+        identityProvider: "http://avqkn-guaaa-aaaaa-qaaea-cai.localhost:4943/"
+      })
+      const identity = authClient.getIdentity()
+      console.log("Zalogowano", identity.getPrincipal())
+      this.identity = identity
+      //const agent = new HttpAgent({ identity })
     }
   },
   mounted(){
@@ -29,6 +43,7 @@ export default {
     <img src="/logo2.svg" alt="DFINITY logo" />
     <br />
     <br />
+    {{ identity?.getPrincipal() }} <button @click="login">Login</button>
       <div>
       {{ notes }}
     </div>
