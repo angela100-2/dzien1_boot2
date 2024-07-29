@@ -33,7 +33,7 @@ export default {
       {{ notes }}
     </div>
     <div>
-      <textarea v-model="newNote"><button @click="dodajNotatke">Dodaj notatkę</button></textarea>
+      <textarea v-model="newNote"></textarea><button @click="dodajNotatke">Dodaj notatkę</button>
     </div>
   </main>
 </template>
