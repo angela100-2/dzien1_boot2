@@ -10,31 +10,45 @@ import { canisterId} from '../../declarations/dzien1_boot2_backend';
 export default {
   data() {
     return {
-      newNote: "",
-      notes: [] as string[][],
+      newChat: "",
+      chats: [] as string[][],
       identity: undefined as undefined | Identity,
-      principalText: ""
+      principalText: "",
+      targetPrincipal: ""
     }
   },
   methods: {
-    async dodajNotatke() {
+    async dodajChatMSG() {
       if (!this.identity || this.identity.getPrincipal() === Principal.anonymous()) {
         throw new Error("User not log")
       }
+
+      const targetPrincipal = Principal.fromText(this.targetPrincipal)
+      if (!targetPrincipal || targetPrincipal === Principal.anonymous()) {
+        throw new Error("Who u writing to")
+      }
+
       const backend = createActor(canisterId, {
         agentOptions: {
           identity: this.identity
         }
       })
-      await backend.add_note(this.newNote)
-      await this.pobierzNotatki()
+
+      await backend.add_chat_msg(this.newChat, targetPrincipal)
+      await this.pobierzChaty()
     },
 
-    async pobierzNotatki() {
+    async pobierzChaty() {
       if (!this.identity || this.identity.getPrincipal() === Principal.anonymous()) {
         throw new Error("User not log")
       }
-      this.notes = await dzien1_boot2_backend.get_notes(this.identity.getPrincipal())
+      
+      const targetPrincipal = Principal.fromText(this.targetPrincipal)
+      if (!targetPrincipal || targetPrincipal === Principal.anonymous()) {
+        throw new Error("Who u writing to")
+      }
+      
+      this.chats = await dzien1_boot2_backend.get_chat(this.identity.getPrincipal(), targetPrincipal)
     },
 
     async login() {
@@ -45,9 +59,9 @@ export default {
       
       const identity = authClient.getIdentity()
       this.principalText = identity.getPrincipal().toText()
-      console.log("Zalogowano", identity.getPrincipal())
+      console.log("Zalogowano", this.principalText)
       this.identity = identity
-      await this.pobierzNotatki()
+      await this.pobierzChaty()
     }
   }
 }
@@ -59,13 +73,16 @@ export default {
     <br />
     <br />
     {{ principalText }} <button @click="login">Login</button>
+    <div>
+      <input v-model="targetPrincipal" />
+    </div>
       <div>
-        <div v-for="note in notes[0]">
-          {{ note }}
+        <div v-for="chat in chats[0]">
+          {{ chat }}
         </div>
     </div>
     <div>
-      <textarea v-model="newNote"></textarea><button @click="dodajNotatke">Dodaj notatke</button>
+      <textarea v-model="newChat"></textarea><button @click="dodajChatMSG">Napisz wiadomość</button>
     </div>
   </main>
 </template>
