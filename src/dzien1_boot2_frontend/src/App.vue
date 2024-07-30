@@ -11,8 +11,9 @@ export default {
   data() {
     return {
       newNote: "",
-      notes: [] as string[],
-      identity: undefined as undefined | Identity
+      notes: [] as string[][],
+      identity: undefined as undefined | Identity,
+      principalText: ""
     }
   },
   methods: {
@@ -43,12 +44,11 @@ export default {
       })
       
       const identity = authClient.getIdentity()
+      this.principalText = identity.getPrincipal().toText()
       console.log("Zalogowano", identity.getPrincipal())
       this.identity = identity
+      await this.pobierzNotatki()
     }
-  },
-  mounted(){
-    this.pobierzNotatki()
   }
 }
 </script>
@@ -58,9 +58,11 @@ export default {
     <img src="/logo2.svg" alt="DFINITY logo" />
     <br />
     <br />
-    {{ identity?.getPrincipal() }} <button @click="login">Login</button>
+    {{ principalText }} <button @click="login">Login</button>
       <div>
-      {{ notes }}
+        <div v-for="note in notes[0]">
+          {{ note }}
+        </div>
     </div>
     <div>
       <textarea v-model="newNote"></textarea><button @click="dodajNotatke">Dodaj notatke</button>
