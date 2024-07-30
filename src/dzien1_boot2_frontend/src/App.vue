@@ -13,42 +13,57 @@ export default {
       newChat: "",
       chats: [] as string[][],
       identity: undefined as undefined | Identity,
-      principalText: "",
+      principal: undefined as undefined | Principal,
       targetPrincipal: ""
     }
   },
   methods: {
-    async dodajChatMSG() {
-      if (!this.identity || this.identity.getPrincipal() === Principal.anonymous()) {
+    isUserLogged() {
+      if (!this.identity || !this.principal ||this.principal === Principal.anonymous()) {
         throw new Error("User not log")
       }
+      return {
+        identity: this.identity,
+        principal: this.principal
+      }
+    },
 
-      const targetPrincipal = Principal.fromText(this.targetPrincipal)
+    validateTargetPrincipal() {
+      const cleanTargetPrincipal = this.targetPrincipal.trim()
+      if(cleanTargetPrincipal === "") {
+        throw new Error ("No principal?")
+      }
+      const targetPrincipal = Principal.fromText(cleanTargetPrincipal)
       if (!targetPrincipal || targetPrincipal === Principal.anonymous()) {
         throw new Error("Who u writing to")
       }
+      return targetPrincipal
+    },
 
-      const backend = createActor(canisterId, {
+    getAuthClient() {
+      this.isUserLogged()
+      return createActor(canisterId, {
         agentOptions: {
           identity: this.identity
         }
       })
+    },
+
+    async dodajChatMSG() {
+      const targetPrincipal = this.validateTargetPrincipal()
+      const backend = this.getAuthClient()
 
       await backend.add_chat_msg(this.newChat, targetPrincipal)
       await this.pobierzChaty()
     },
 
     async pobierzChaty() {
-      if (!this.identity || this.identity.getPrincipal() === Principal.anonymous()) {
-        throw new Error("User not log")
-      }
+      const {identity, principal} = this.isUserLogged()
+      const targetPrincipal = this.validateTargetPrincipal()
       
-      const targetPrincipal = Principal.fromText(this.targetPrincipal)
-      if (!targetPrincipal || targetPrincipal === Principal.anonymous()) {
-        throw new Error("Who u writing to")
-      }
-      
-      this.chats = await dzien1_boot2_backend.get_chat(this.identity.getPrincipal(), targetPrincipal)
+      const chatPath = [identity.getPrincipal(), targetPrincipal]
+      chatPath.sort()
+      this.chats = await dzien1_boot2_backend.get_chat(chatPath)
     },
 
     async login() {
@@ -58,8 +73,8 @@ export default {
       })
       
       const identity = authClient.getIdentity()
-      this.principalText = identity.getPrincipal().toText()
-      console.log("Zalogowano", this.principalText)
+      this.principal = identity.getPrincipal()
+      console.log("Zalogowano", this.principal)
       this.identity = identity
       await this.pobierzChaty()
     }
@@ -72,7 +87,7 @@ export default {
     <img src="/logo2.svg" alt="DFINITY logo" />
     <br />
     <br />
-    {{ principalText }} <button @click="login">Login</button>
+    {{ principal }} <button @click="login">Login</button>
     <div>
       <input v-model="targetPrincipal" /><button @click="pobierzChaty">Pobierz chat</button>
     </div>
