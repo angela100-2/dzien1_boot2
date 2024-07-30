@@ -61,22 +61,22 @@ export default {
       const {identity, principal} = this.isUserLogged()
       const targetPrincipal = this.validateTargetPrincipal()
       
-      const chatPath = [identity.getPrincipal(), targetPrincipal]
-      chatPath.sort()
+      const chatPath = [targetPrincipal, identity.getPrincipal()].sort()
       this.chats = await dzien1_boot2_backend.get_chat(chatPath)
     },
 
     async login() {
       const authClient = await AuthClient.create()
       await authClient.login({
-        identityProvider: "http://avqkn-guaaa-aaaaa-qaaea-cai.localhost:4943/"
+        identityProvider: "http://avqkn-guaaa-aaaaa-qaaea-cai.localhost:4943/",
+        onSuccess: async () => {
+          const identity = authClient.getIdentity()
+          this.principal = identity.getPrincipal()
+          console.log("Zalogowano", this.principal)
+          this.identity = identity
+          await this.pobierzChaty()
+        }
       })
-      
-      const identity = authClient.getIdentity()
-      this.principal = identity.getPrincipal()
-      console.log("Zalogowano", this.principal)
-      this.identity = identity
-      await this.pobierzChaty()
     }
   }
 }
