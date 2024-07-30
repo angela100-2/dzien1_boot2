@@ -33,7 +33,7 @@ fn add_note(note: String) {
 
 #[ic_cdk::query]
 fn get_chat(user1: Principal, user2: Principal) -> Option<Vec<String>> {
-    CHAT.with_borrow(|chats| chats.get(&[user1, user2]).cloned())
+    CHAT.with_borrow(|chat| chat.get(&[user1, user2]).cloned())
 }
 
 #[ic_cdk::update]
@@ -44,7 +44,7 @@ fn add_chat_msg(msg: String, user2: Principal) {
         panic!("Who is this??")
     }
 
-    let principals: [Principal; 2] = [user1, user2];
+    let mut principals: [Principal; 2] = [user1, user2];
     principals.sort();
 
     CHAT.with_borrow_mut(|chat| {
