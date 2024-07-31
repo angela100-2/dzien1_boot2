@@ -6,6 +6,7 @@ import { HttpAgent } from '@dfinity/agent';
 import type { Identity } from '@dfinity/agent';
 import { Principal } from '@dfinity/principal';
 import { canisterId} from '../../declarations/dzien1_boot2_backend';
+import type { UserData } from '../../declarations/dzien1_boot2_backend/dzien1_boot2_backend.did';
 
 export default {
   data() {
@@ -14,7 +15,8 @@ export default {
       chats: [] as string[][],
       identity: undefined as undefined | Identity,
       principal: undefined as undefined | Principal,
-      targetPrincipal: ""
+      targetPrincipal: "",
+      userData: undefined as undefined | UserData
     }
   },
   methods: {
@@ -67,16 +69,34 @@ export default {
 
     async login() {
       const authClient = await AuthClient.create()
+      
       await authClient.login({
         identityProvider: "http://avqkn-guaaa-aaaaa-qaaea-cai.localhost:4943/",
+        
         onSuccess: async () => {
           const identity = authClient.getIdentity()
-          this.principal = identity.getPrincipal()
-          console.log("Zalogowano", this.principal)
+          const principal = identity.getPrincipal()
+          
+          this.principal = principal
           this.identity = identity
-          await this.pobierzChaty()
+          
+          console.log("Zalogowano", this.principal)
+          const maybeUserData = await dzien1_boot2_backend.get_user(principal)
+          if (maybeUserData.length === 0 ) {
+            this.userData = undefined
+          } else {
+            this.userData = maybeUserData[0]
+          }
         }
       })
+    },
+    async logout() {
+      const authClient = await AuthClient.create()
+      await authClient.logout()
+      this.identity = undefined
+      this.principal = undefined
+      this.chats = []
+      this.userData = undefined
     }
   }
 }
@@ -84,10 +104,9 @@ export default {
 
 <template>
   <main>
-    <img src="/logo2.svg" alt="DFINITY logo" />
-    <br />
-    <br />
-    {{ principal }} <button @click="login">Login</button>
+    {{ principal }} 
+    <button v-if="!principal" @click="login">Login</button>
+    <button v-if="principal" @click="logout">Logout</button>
     <div>
       <input v-model="targetPrincipal" /><button @click="pobierzChaty">Pobierz chat</button>
     </div>
