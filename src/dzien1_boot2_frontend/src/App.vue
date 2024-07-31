@@ -17,7 +17,8 @@ export default {
       principal: undefined as undefined | Principal,
       targetPrincipal: "",
       userData: undefined as undefined | UserData,
-      newUsername: ""
+      newUsername: "",
+      allUsers: [] as [Principal, UserData][]
     }
   },
   methods: {
@@ -83,6 +84,7 @@ export default {
           
           console.log("Zalogowano", this.principal)
           await this.getUserData()
+          await this.getAllUsers()
         }
       })
     },
@@ -102,6 +104,7 @@ export default {
       const backend = this.getAuthClient()
       await backend.register(trimedUsername)
       await this.getUserData()
+      await this.getAllUsers()
     },
 
     async getUserData() {
@@ -113,22 +116,29 @@ export default {
             this.userData = maybeUserData[0]
           }
           console.log("user data", this.userData)
+    },
+
+    async getAllUsers() {
+      this.allUsers = await dzien1_boot2_backend.get_users()
     }
   }
 }
 </script>
 
 <template>
-  <main>
-    {{ principal }} 
+  <main> 
     <button v-if="!principal" @click="login">Login</button>
     <button v-if="principal" @click="logout">Logout</button>
     <div v-if="principal && !userData">
-      <input v-model="newUsername" /><button @click="registerUsername"></button>
+      <input v-model="newUsername" placeholde="Podaj nick"/><button @click="registerUsername">Zapisz Nick</button>
     </div>
     <div v-if="principal && userData">
-      <div>
-        <input v-model="targetPrincipal" /><button @click="pobierzChaty">Pobierz chat</button>
+      {{ userData.nickname }}
+      <div v-if="allUsers">
+        <select v-model="targetPrincipal">
+          <option disabled value="">Please select one</option>
+          <option v-for="[userPrincipal, userData] in allUsers" :value="userPrincipal.toText()">{{ userData.nickname }}</option>
+        </select>
       </div>
       <div>
         <div v-for="chat in chats[0]">
@@ -136,7 +146,7 @@ export default {
         </div>
       </div>
       <div>
-        <textarea v-model="newChat"></textarea><button @click="dodajChatMSG">Napisz wiadomość</button>
+        <textarea v-model="newChat" placeholder="Wiadomość"></textarea><button @click="dodajChatMSG">Napisz wiadomość</button>
       </div>
     </div>
   </main>
