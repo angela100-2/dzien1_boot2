@@ -21,17 +21,13 @@ fn register(nick: String) {
 }
 
 #[ic_cdk::query]
-fn get_users() -> HashMap<Principal, UserData>{
-    USERS.with_borrow(|users| {
-        users.clone()
-    })
+fn get_users() -> HashMap<Principal, UserData> {
+    USERS.with_borrow(|users| users.clone())
 }
 
 #[ic_cdk::query]
-fn get_user(user: Principal) -> Option<UserData>{
-    USERS.with_borrow(|users| {
-        users.get(&user).cloned()
-    })
+fn get_user(user: Principal) -> Option<UserData> {
+    USERS.with_borrow(|users| users.get(&user).cloned())
 }
 
 #[ic_cdk::query]
@@ -46,9 +42,7 @@ fn add_chat_msg(msg: String, user2: Principal) {
         panic!("Who is this??")
     }
 
-    let is_user_registered = USERS.with_borrow(|users| {
-        users.contains_key(&user1)
-    });
+    let is_user_registered = USERS.with_borrow(|users| users.contains_key(&user1));
     if !is_user_registered {
         panic!("You no register. Go register.")
     }
