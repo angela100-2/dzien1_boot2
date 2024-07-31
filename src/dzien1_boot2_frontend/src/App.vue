@@ -16,7 +16,8 @@ export default {
       identity: undefined as undefined | Identity,
       principal: undefined as undefined | Principal,
       targetPrincipal: "",
-      userData: undefined as undefined | UserData
+      userData: undefined as undefined | UserData,
+      newUsername: ""
     }
   },
   methods: {
@@ -81,22 +82,37 @@ export default {
           this.identity = identity
           
           console.log("Zalogowano", this.principal)
-          const maybeUserData = await dzien1_boot2_backend.get_user(principal)
+          await this.getUserData()
+        }
+      })
+    },
+
+    async logout() {
+      const authClient = await AuthClient.create()
+      await authClient.logout()
+      
+      this.identity = undefined
+      this.principal = undefined
+      this.chats = []
+      this.userData = undefined
+    },
+
+    async registerUsername() {
+      const trimedUsername = this.newUsername.trim()
+      const backend = this.getAuthClient()
+      await backend.register(trimedUsername)
+      await this.getUserData()
+    },
+
+    async getUserData() {
+      const {principal} = this.isUserLogged()
+      const maybeUserData = await dzien1_boot2_backend.get_user(principal as Principal)
           if (maybeUserData.length === 0 ) {
             this.userData = undefined
           } else {
             this.userData = maybeUserData[0]
           }
-        }
-      })
-    },
-    async logout() {
-      const authClient = await AuthClient.create()
-      await authClient.logout()
-      this.identity = undefined
-      this.principal = undefined
-      this.chats = []
-      this.userData = undefined
+          console.log("user data", this.userData)
     }
   }
 }
@@ -107,16 +123,21 @@ export default {
     {{ principal }} 
     <button v-if="!principal" @click="login">Login</button>
     <button v-if="principal" @click="logout">Logout</button>
-    <div>
-      <input v-model="targetPrincipal" /><button @click="pobierzChaty">Pobierz chat</button>
+    <div v-if="principal && !userData">
+      <input v-model="newUsername" /><button @click="registerUsername"></button>
     </div>
+    <div v-if="principal && userData">
+      <div>
+        <input v-model="targetPrincipal" /><button @click="pobierzChaty">Pobierz chat</button>
+      </div>
       <div>
         <div v-for="chat in chats[0]">
           {{ chat }}
         </div>
-    </div>
-    <div>
-      <textarea v-model="newChat"></textarea><button @click="dodajChatMSG">Napisz wiadomość</button>
+      </div>
+      <div>
+        <textarea v-model="newChat"></textarea><button @click="dodajChatMSG">Napisz wiadomość</button>
+      </div>
     </div>
   </main>
 </template>
